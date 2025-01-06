@@ -1,15 +1,17 @@
-FROM code.pztrn.name/containers/mirror/golang:1.18.3-alpine as build
+FROM golang:1.22.10-bookworm as build
 
-ENV DRONE_VERSION=2.16.0
+ENV DRONE_VERSION=2.25.0
 
-RUN apk add -U --no-cache ca-certificates git build-base
+RUN apt-get update && \
+    apt-get install --no-install-recommends --assume-yes \
+    ca-certificates git build-essential
 RUN mkdir -p /src/drone && \
     cd /src/drone && \
-    git clone https://github.com/harness/drone . && \
-    git checkout -b v${DRONE_VERSION}
+    git clone https://github.com/drone/drone . && \
+    git checkout tags/v${DRONE_VERSION} -b v${DRONE_VERSION}
 RUN cd /src/drone/cmd/drone-server && go build -tags "nolimit" -ldflags "-extldflags \"-static\"" -o drone-server
 
-FROM code.pztrn.name/containers/mirror/alpine:3.16.1
+FROM alpine:3.16.1
 
 EXPOSE 80 443
 VOLUME /data
